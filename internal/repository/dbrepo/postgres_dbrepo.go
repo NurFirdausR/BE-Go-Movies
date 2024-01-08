@@ -61,7 +61,7 @@ func (m *PostgresDBRepo) GetUserByEmail(email string) (*models.User, error) {
 
 	var user models.User
 
-	row := m.DB.QueryRowContext(ctx, query, user.Email)
+	row := m.DB.QueryRowContext(ctx, query, email)
 
 	err := row.Scan(
 		&user.ID,
