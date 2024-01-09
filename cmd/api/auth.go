@@ -87,6 +87,7 @@ func (j *Auth) GetRefreshCookie(refreshToken string) *http.Cookie {
 		HttpOnly: true,
 		Secure:   true,
 	}
+
 }
 
 func (j *Auth) GetExpiredRefreshCookie() *http.Cookie {
