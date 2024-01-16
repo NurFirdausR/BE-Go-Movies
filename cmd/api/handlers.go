@@ -276,3 +276,68 @@ func (app *application) getPoster(movie models.Movie) models.Movie {
 
 	return movie
 }
+
+func (app *application) UpdateMovie(w http.ResponseWriter, r *http.Request) {
+	var payload models.Movie
+
+	err := app.readJSON(w, r, &payload)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	movie, err := app.DB.OneMovie(payload.ID)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	// err = app.DB.UpdateMovie(*movie)
+	movie.Title = payload.Title
+	movie.ReleaseDate = payload.ReleaseDate
+	movie.Description = payload.Description
+	movie.MPAARating = payload.MPAARating
+	movie.RunTime = payload.RunTime
+	movie.UpdatedAt = time.Now()
+
+	err = app.DB.UpdateMovie(*movie)
+
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	err = app.DB.UpdateMovieGenres(payload.ID, payload.GenresArray)
+
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	resp := JSONResponse{
+		Error:   false,
+		Message: "movie updated",
+	}
+	app.writeJSON(w, http.StatusAccepted, resp)
+
+}
+
+func (app *application) DeleteMovie(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id") // get id dari string
+	movieID, err := strconv.Atoi(id)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+	err = app.DB.DeleteMovie(movieID)
+
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	resp := JSONResponse{
+		Error:   false,
+		Message: "movie delete!",
+	}
+	app.writeJSON(w, http.StatusAccepted, resp)
+}
