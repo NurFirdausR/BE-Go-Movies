@@ -19,23 +19,28 @@ func (m *PostgresDBRepo) Connection() *sql.DB {
 }
 func (m *PostgresDBRepo) AllMovies(genre ...int) ([]*models.Movie, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
-
 	defer cancel()
 
 	where := ""
 	if len(genre) > 0 {
-		where = fmt.Sprintf("where id in  (select movie_id from movies_genres where genre_id = %d)", genre[0])
+		where = fmt.Sprintf("where id in (select movie_id from movies_genres where genre_id = %d)", genre[0])
 	}
-	query := fmt.Sprintf(
-		`SELECT 
-				id,title,release_date,runtime,mpaa_rating,description,coalesce(image,''),created_at,updated_at 
-			FROM movies %s 
-			ORDER BY title`, where)
+
+	query := fmt.Sprintf(`
+		select
+			id, title, release_date, runtime,
+			mpaa_rating, description, coalesce(image, ''),
+			created_at, updated_at
+		from
+			movies %s
+		order by
+			title
+	`, where)
+
 	rows, err := m.DB.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 
 	var movies []*models.Movie
@@ -56,8 +61,10 @@ func (m *PostgresDBRepo) AllMovies(genre ...int) ([]*models.Movie, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		movies = append(movies, &movie)
 	}
+
 	return movies, nil
 }
 
