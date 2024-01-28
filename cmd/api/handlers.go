@@ -213,6 +213,7 @@ func (app *application) InsertMovie(w http.ResponseWriter, r *http.Request) {
 
 	// try get an image
 	movie = app.getPoster(movie)
+	fmt.Println(movie)
 	movie.CreatedAt = time.Now()
 	movie.UpdatedAt = time.Now()
 
@@ -240,6 +241,7 @@ func (app *application) getPoster(movie models.Movie) models.Movie {
 		Page    int `json:"page"`
 		Results []struct {
 			PosterPath string `json:"poster_path"`
+			BackDrop   string `json:"backdrop_path"`
 		} `json:"results"`
 		TotalPages int `json:"total_pages"`
 	}
@@ -273,6 +275,7 @@ func (app *application) getPoster(movie models.Movie) models.Movie {
 	json.Unmarshal(bodyBytes, &responseObject)
 	if len(responseObject.Results) > 0 {
 		movie.Image = responseObject.Results[0].PosterPath
+		movie.ImageBackdrop = responseObject.Results[0].BackDrop
 	}
 
 	return movie
@@ -385,4 +388,47 @@ func (app *application) moviesGraphQL(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(j)
+}
+
+func (app *application) paginationMovies(w http.ResponseWriter, r *http.Request) {
+	movies, _ := app.DB.AllMovies()
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+
+	page := 1
+	limit := 10
+
+	// Convert page and limit to integers
+	if pageStr != "" {
+		page, _ = strconv.Atoi(pageStr)
+	}
+	if limitStr != "" {
+		limit, _ = strconv.Atoi(limitStr)
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 50 { // Adjust limit to a reasonable max
+		limit = 10
+	}
+
+	offset := (page - 1) * limit
+
+	// Slice movies based on offset and limit
+	var paginatedMovies []*models.Movie
+	if offset < len(movies) {
+		end := offset + limit
+		if end > len(movies) {
+			end = len(movies)
+		}
+		paginatedMovies = movies[offset:end]
+	}
+	// Simulate some processing time
+	time.Sleep(100 * time.Millisecond)
+
+	// JSON encode response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(paginatedMovies)
+
 }
