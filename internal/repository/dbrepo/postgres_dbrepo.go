@@ -29,7 +29,7 @@ func (m *PostgresDBRepo) AllMovies(genre ...int) ([]*models.Movie, error) {
 	query := fmt.Sprintf(`
 		select
 			id, title, release_date, runtime,
-			mpaa_rating, description, coalesce(image, ''),
+			mpaa_rating, description, coalesce(image, ''),coalesce(image_backdrop, ''),
 			created_at, updated_at
 		from
 			movies %s
@@ -55,6 +55,7 @@ func (m *PostgresDBRepo) AllMovies(genre ...int) ([]*models.Movie, error) {
 			&movie.MPAARating,
 			&movie.Description,
 			&movie.Image,
+			&movie.ImageBackdrop,
 			&movie.CreatedAt,
 			&movie.UpdatedAt,
 		)
@@ -73,7 +74,7 @@ func (m *PostgresDBRepo) OneMovie(id int) (*models.Movie, error) {
 	defer cancel()
 
 	query := `select id, title, release_date, runtime, mpaa_rating, 
-	description, coalesce(image, ''), created_at, updated_at
+	description, coalesce(image, ''), coalesce(image_backdrop, ''), created_at, updated_at
 	from movies where id = $1`
 
 	row := m.DB.QueryRowContext(ctx, query, id)
@@ -88,6 +89,7 @@ func (m *PostgresDBRepo) OneMovie(id int) (*models.Movie, error) {
 		&movie.MPAARating,
 		&movie.Description,
 		&movie.Image,
+		&movie.ImageBackdrop,
 		&movie.CreatedAt,
 		&movie.UpdatedAt,
 	)
@@ -129,7 +131,7 @@ func (m *PostgresDBRepo) OneMovieForEdit(id int) (*models.Movie, []*models.Genre
 	defer cancel()
 
 	query := `select id, title, release_date, runtime, mpaa_rating, 
-	description, coalesce(image, ''), created_at, updated_at
+	description, coalesce(image, ''),coalesce(image_backdrop, ''), created_at, updated_at
 	from movies where id = $1`
 
 	row := m.DB.QueryRowContext(ctx, query, id)
@@ -144,6 +146,7 @@ func (m *PostgresDBRepo) OneMovieForEdit(id int) (*models.Movie, []*models.Genre
 		&movie.MPAARating,
 		&movie.Description,
 		&movie.Image,
+		&movie.ImageBackdrop,
 		&movie.CreatedAt,
 		&movie.UpdatedAt,
 	)
@@ -288,8 +291,8 @@ func (m *PostgresDBRepo) InsertMovie(movie models.Movie) (int, error) {
 	defer cancel()
 
 	stmt := `insert into movies (title, description, release_date, runtime,
-		mpaa_rating, created_at, updated_at, image)
-		values ($1, $2, $3, $4, $5, $6, $7, $8) returning id`
+		mpaa_rating, created_at, updated_at, image,image_backdrop )
+		values ($1, $2, $3, $4, $5, $6, $7, $8 , $9) returning id`
 
 	var newID int
 
@@ -302,6 +305,7 @@ func (m *PostgresDBRepo) InsertMovie(movie models.Movie) (int, error) {
 		movie.CreatedAt,
 		movie.UpdatedAt,
 		movie.Image,
+		movie.ImageBackdrop,
 	).Scan(&newID)
 
 	if err != nil {
@@ -317,7 +321,7 @@ func (m *PostgresDBRepo) UpdateMovie(movie models.Movie) error {
 
 	stmt := `update movies set title = $1, description = $2, release_date = $3,
 				runtime = $4, mpaa_rating = $5,
-				updated_at = $6, image = $7 where id = $8`
+				updated_at = $6, image = $7, image_backdrop = $8 where id = $9`
 
 	_, err := m.DB.ExecContext(ctx, stmt,
 		movie.Title,
@@ -327,6 +331,7 @@ func (m *PostgresDBRepo) UpdateMovie(movie models.Movie) error {
 		movie.MPAARating,
 		movie.UpdatedAt,
 		movie.Image,
+		movie.ImageBackdrop,
 		movie.ID,
 	)
 

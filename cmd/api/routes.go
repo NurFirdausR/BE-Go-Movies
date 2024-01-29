@@ -23,6 +23,7 @@ func (app *application) routes() http.Handler {
 
 	mux.Get("/genres", app.AllGenres)
 	mux.Get("/movies/genres/{id}", app.AllMoviesByGenre)
+	mux.Get("/home", app.paginationMovies)
 
 	mux.Post("/graph", app.moviesGraphQL)
 

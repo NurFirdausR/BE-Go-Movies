@@ -58,6 +58,7 @@ CREATE TABLE public.movies (
     mpaa_rating character varying(10),
     description text,
     image character varying(255),
+    image_backdrop character varying(255),
     created_at timestamp without time zone,
     updated_at timestamp without time zone
 );
