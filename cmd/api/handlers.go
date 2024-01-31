@@ -213,7 +213,7 @@ func (app *application) InsertMovie(w http.ResponseWriter, r *http.Request) {
 
 	// try get an image
 	movie = app.getPoster(movie)
-	fmt.Println(movie)
+	// fmt.Println(movie)
 	movie.CreatedAt = time.Now()
 	movie.UpdatedAt = time.Now()
 
@@ -295,6 +295,7 @@ func (app *application) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 		app.errorJSON(w, err)
 		return
 	}
+	moviePoster := app.getPoster(payload)
 
 	// err = app.DB.UpdateMovie(*movie)
 	movie.Title = payload.Title
@@ -302,7 +303,10 @@ func (app *application) UpdateMovie(w http.ResponseWriter, r *http.Request) {
 	movie.Description = payload.Description
 	movie.MPAARating = payload.MPAARating
 	movie.RunTime = payload.RunTime
+	movie.Image = moviePoster.Image
+	movie.ImageBackdrop = moviePoster.ImageBackdrop
 	movie.UpdatedAt = time.Now()
+	// fmt.Println(movie)
 
 	err = app.DB.UpdateMovie(*movie)
 
@@ -427,8 +431,33 @@ func (app *application) paginationMovies(w http.ResponseWriter, r *http.Request)
 	// Simulate some processing time
 	time.Sleep(100 * time.Millisecond)
 
+	///////////////////////////////////////////////
+	// get the query from the request
+	q, _ := io.ReadAll(r.Body)
+	query := string(q)
+
+	// create a new variable of type *graph.Graph
+	g := graph.New(paginatedMovies)
+
+	// set the query string on the variable
+	g.QueryString = query
+
+	// perform the query
+	resp, err := g.Query()
+	// fmt.Println(resp)
+	if err != nil {
+		app.errorJSON(w, err)
+		return
+	}
+
+	// send the response
+	// j, _ := json.MarshalIndent(resp, "", "\t")
+	///////////////////////////////////////////////
+
 	// JSON encode response
+	j, _ := json.MarshalIndent(resp, "", "\t")
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(paginatedMovies)
+	w.WriteHeader(http.StatusOK)
+	w.Write(j)
 
 }

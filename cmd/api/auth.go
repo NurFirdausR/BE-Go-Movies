@@ -97,8 +97,8 @@ func (j *Auth) GetExpiredRefreshCookie() *http.Cookie {
 		Name:     j.CookieName,
 		Path:     j.CookiePath,
 		Value:    "",
-		Expires:  time.Unix(0, 0),
-		MaxAge:   -1,
+		Expires:  time.Now().Add(10 * time.Minute),
+		MaxAge:   600, // MaxAge is specified in seconds
 		SameSite: http.SameSiteStrictMode,
 		Domain:   j.CookieDomain,
 		HttpOnly: true,

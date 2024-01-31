@@ -53,6 +53,9 @@ func New(movies []*models.Movie) *Graph {
 				"image": &graphql.Field{
 					Type: graphql.String,
 				},
+				"image_backdrop": &graphql.Field{
+					Type: graphql.String,
+				},
 			},
 		},
 	)
